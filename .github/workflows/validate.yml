@@ -26,7 +26,11 @@ jobs:
           # `brands`: logo v home-assistant/brands je potřeba až pro výchozí
           # seznam HACS, ne pro vlastní repozitář. Až se tam logo pošle,
           # tuhle výjimku smaž — jinak kontrola nehlídá nic.
-          ignore: brands
+          # `license`: licence je záměrně PolyForm Noncommercial (bez
+          # komerčního použití). GitHub ji neumí rozpoznat (SPDX:
+          # NOASSERTION), takže by kontrola padala napořád, i když licence
+          # v repu je. Instalaci přes vlastní repozitář HACS to nevadí.
+          ignore: brands license
 
   hassfest:
     name: hassfest
