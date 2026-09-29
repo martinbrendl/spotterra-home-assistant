@@ -1,0 +1,78 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Spotterra",
+        "description": "Token si vytvoř ve Spotterře: Nastavení → Účet → Integrace Home Assistant.",
+        "data": {
+          "token": "Token",
+          "url": "Server"
+        },
+        "data_description": {
+          "url": "Nech výchozí adresu."
+        }
+      },
+      "reauth_confirm": {
+        "title": "Nový token Spotterry",
+        "description": "Předchozí token už neplatí (byl zrušen v nastavení Spotterry). Vytvoř nový a vlož ho sem.",
+        "data": {
+          "token": "Token"
+        }
+      }
+    },
+    "error": {
+      "invalid_auth": "Token nefunguje. Vytvoř nový v nastavení Spotterry.",
+      "cannot_connect": "Spotterra není dostupná. Zkus to za chvíli."
+    },
+    "abort": {
+      "already_configured": "Tenhle token už je nastavený.",
+      "reauth_successful": "Token aktualizován."
+    }
+  },
+  "entity": {
+    "sensor": {
+      "nad_domem": {
+        "name": "Letadla nad domem"
+      },
+      "zajimave": {
+        "name": "Zajímavá letadla"
+      },
+      "dalsi_prulet_min": {
+        "name": "Příští přelet za"
+      },
+      "dalsi_prulet_typ": {
+        "name": "Příští přelet — stroj"
+      },
+      "nejblizsi_zajimave": {
+        "name": "Nejzajímavější teď"
+      },
+      "iss_zacatek": {
+        "name": "Příští průlet ISS"
+      },
+      "iss_elevace": {
+        "name": "Výška příštího průletu ISS"
+      }
+    },
+    "binary_sensor": {
+      "je_zajimave": {
+        "name": "Nad domem je něco zajímavého"
+      },
+      "tiche_hodiny": {
+        "name": "Tiché hodiny"
+      }
+    },
+    "event": {
+      "udalost": {
+        "name": "Hlášení",
+        "state_attributes": {
+          "event_type": {
+            "state": {
+              "alert": "Alert",
+              "hlidka": "Hlídka"
+            }
+          }
+        }
+      }
+    }
+  }
+}

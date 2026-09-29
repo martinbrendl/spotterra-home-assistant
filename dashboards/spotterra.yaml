@@ -1,0 +1,116 @@
+# Ovládací panel Spotterra pro Home Assistant (jen vestavěné karty, bez HACS).
+#
+# Použití: Nastavení → Ovládací panely → Přidat ovládací panel → Nový od nuly
+# → ⋮ → Upravit → ⋮ → Editor YAML → vlož tenhle soubor.
+#
+# ID entit začínají názvem tvého místa (tady `domov`). Po vložení
+# nahraď `domov` tím, co máš ty — najdeš ho v Nastavení → Zařízení
+# a služby → Spotterra → entity.
+title: Spotterra
+views:
+  - title: Nad domem
+    path: nad-domem
+    icon: mdi:airplane
+    type: sections
+    max_columns: 3
+    sections:
+      - type: grid
+        cards:
+          - type: heading
+            heading: Právě teď
+            icon: mdi:radar
+          - type: tile
+            entity: sensor.domov_letadla_nad_domem
+            name: Letadla v okruhu
+            color: blue
+          - type: tile
+            entity: sensor.domov_zajimava_letadla
+            name: Zajímavá
+            color: orange
+          - type: tile
+            entity: binary_sensor.domov_nad_domem_je_neco_zajimaveho
+            name: Stojí za to jít ven
+            color: orange
+            grid_options:
+              columns: 12
+          - type: markdown
+            content: |
+              {% set s = 'sensor.domov_pristi_prelet_za' %}
+              {% if states(s) not in ['unknown', 'unavailable'] %}
+              ## ✈️ {{ state_attr(s, 'typ_nazev') or state_attr(s, 'typ') or state_attr(s, 'volaci_znak') }}
+
+              **{{ state_attr(s, 'volaci_znak') }}** · {{ state_attr(s, 'registrace') or '—' }}
+
+              {% if states(s) | int(0) == 0 %}**Právě teď nad tebou**{% else %}**Za {{ states(s) }} min**{% endif %} &nbsp;·&nbsp; {{ state_attr(s, 'elevace') | round(0) | int }}° nad obzorem &nbsp;·&nbsp; {{ state_attr(s, 'smer') }} &nbsp;·&nbsp; {{ state_attr(s, 'vzdalenost_km') | round(0) | int }} km
+              {% else %}
+              ## ✈️ Teď nic na dohled
+
+              Jakmile poletí něco, co opravdu uvidíš, objeví se tady.
+              {% endif %}
+      - type: grid
+        cards:
+          - type: heading
+            heading: V okruhu
+            icon: mdi:format-list-bulleted
+          - type: markdown
+            content: |
+              {% set l = state_attr('sensor.domov_letadla_nad_domem', 'letadla') or [] %}
+              {% if l %}
+              | | Let | Stroj | km | výška km |
+              |:--|:--|:--|--:|--:|
+              {% for a in l -%}
+              | {{ '⭐' if a.chybi_ve_sbirce else '' }}{{ '👁' if a.uvidis else '' }} | **{{ a.volaci_znak or a.registrace or a.hex | upper }}** | {{ a.typ_nazev or a.typ or '—' }} | {{ a.vzdalenost_km | round(0) | int }} | {{ ((a.vyska_m or 0) / 1000) | round(1) }} |
+              {% endfor %}
+
+              ⭐ chybí ti ve sbírce &nbsp;·&nbsp; 👁 uvidíš ho
+              {% else %}
+              Nad domem je teď prázdno.
+              {% endif %}
+      - type: grid
+        cards:
+          - type: heading
+            heading: Nejzajímavější a ISS
+            icon: mdi:star-shooting-outline
+          - type: tile
+            entity: sensor.domov_nejzajimavejsi_ted
+            name: Nejzajímavější teď
+            color: orange
+            grid_options:
+              columns: 12
+          - type: markdown
+            content: |
+              {% set s = 'sensor.domov_pristi_prulet_iss' %}
+              {% if states(s) not in ['unknown', 'unavailable'] %}
+              ## 🛰 {{ as_timestamp(states(s)) | timestamp_custom('%-d. %-m. v %H:%M') }}
+
+              {{ states('sensor.domov_vyska_pristiho_pruletu_iss') }}° nad obzorem
+
+              {{ state_attr(s, 'tts_text') }}
+              {% else %}
+              ## 🛰 ISS
+
+              V příštích 36 hodinách žádný viditelný průlet nad 30°.
+              {% endif %}
+          - type: tile
+            entity: binary_sensor.domov_tiche_hodiny
+            name: Tiché hodiny
+            color: grey
+          - type: tile
+            entity: event.domov_hlaseni
+            name: Poslední hlášení
+            color: blue
+      - type: grid
+        column_span: 3
+        cards:
+          - type: heading
+            heading: Dnešní provoz
+            icon: mdi:chart-line
+          - type: history-graph
+            hours_to_show: 12
+            grid_options:
+              columns: full
+            entities:
+              - entity: sensor.domov_letadla_nad_domem
+                name: V okruhu
+              - entity: sensor.domov_zajimava_letadla
+                name: Zajímavá

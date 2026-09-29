@@ -1,0 +1,63 @@
+# Kontroly integrace: instalovatelnost přes HACS, pravidla Home Assistantu
+# (hassfest) a testy + import všech modulů proti aktuálnímu Home Assistantu
+# (vyžaduje Python >= 3.14).
+
+name: Validate
+
+on:
+  push:
+  pull_request:
+  schedule:
+    # Každou noc: hassfest sleduje beta kanál HA, takže ohlásí nekompatibilitu
+    # dřív, než ji nahlásí uživatel.
+    - cron: "17 3 * * *"
+  workflow_dispatch:
+
+permissions: {}
+
+jobs:
+  hacs:
+    name: HACS
+    runs-on: ubuntu-latest
+    steps:
+      - uses: hacs/action@main
+        with:
+          category: integration
+          # `brands`: logo v home-assistant/brands je potřeba až pro výchozí
+          # seznam HACS, ne pro vlastní repozitář. Až se tam logo pošle,
+          # tuhle výjimku smaž — jinak kontrola nehlídá nic.
+          ignore: brands
+
+  hassfest:
+    name: hassfest
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: home-assistant/actions/hassfest@master
+
+  testy:
+    name: Testy + import proti HA
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.14"
+      - name: Závislosti
+        run: pip install pytest homeassistant
+      - name: Logika klienta (api.py, bez HA)
+        run: python -m pytest tests/ -q
+      # Import všech modulů PROTI SKUTEČNÉMU Home Assistantu. Chytí
+      # přejmenovanou konstantu nebo třídu, která v HA zmizela — tedy
+      # přesně to, co testy api.py nevidí a syntaktická kontrola taky ne.
+      # Neověří, že entity ukazují správná čísla: to je živý test.
+      - name: Import integrace
+        run: |
+          python - <<'PY'
+          import importlib, pathlib
+          moduly = sorted(p.stem for p in pathlib.Path("custom_components/spotterra").glob("*.py"))
+          for m in moduly:
+              importlib.import_module(f"custom_components.spotterra.{m}" if m != "__init__" else "custom_components.spotterra")
+              print("ok", m)
+          assert len(moduly) >= 9, moduly
+          PY

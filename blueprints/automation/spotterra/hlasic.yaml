@@ -1,0 +1,113 @@
+blueprint:
+  name: Spotterra — hlásič letadel
+  description: >-
+    Když ti Spotterra pošle hlášení (vzácný stroj, wishlist, přelet nad
+    domem, hlídaný let), řekne ho reproduktor. Věta přichází hotová ze
+    serveru ve tvém jazyce — „Airbus A380", ne „A388".
+
+
+    Tiché hodiny se tu NENASTAVUJÍ: platí ty ze Spotterry (Nastavení →
+    Notifikace). Kdyby je měl blueprint zvlášť, telefon by mlčel
+    a reproduktor hlásil.
+
+
+    Hlášení jsou součástí Spotterra Pro; senzory integrace fungují i bez něj.
+  domain: automation
+  source_url: https://github.com/martinbrendl/spotterra-home-assistant/blob/main/blueprints/automation/spotterra/hlasic.yaml
+  input:
+    tts:
+      name: Hlasová služba (TTS)
+      selector:
+        entity:
+          domain: tts
+    reproduktor:
+      name: Reproduktor
+      selector:
+        entity:
+          domain: media_player
+    kdo_doma:
+      name: Hlásit jen když je doma
+      description: Nech prázdné, když se má hlásit vždycky.
+      default: []
+      selector:
+        entity:
+          domain: person
+          multiple: true
+    druhy:
+      name: Co hlásit
+      default: [alert, hlidka]
+      selector:
+        select:
+          multiple: true
+          options:
+            - label: Alerty (vzácné, wishlist, nad tebou)
+              value: alert
+            - label: Hlídané lety
+              value: hlidka
+    hlasitost:
+      name: Hlasitost hlášení
+      description: Po hlášení se vrátí původní hlasitost.
+      default: 0.4
+      selector:
+        number:
+          min: 0.05
+          max: 1
+          step: 0.05
+    rozestup:
+      name: Nejmíň minut mezi hlášeními
+      description: Nad letištěm by jinak reproduktor nezmlkl.
+      default: 5
+      selector:
+        number:
+          min: 0
+          max: 60
+          unit_of_measurement: min
+
+# Druhé hlášení v rozestupu se tiše zahodí, ne odloží: letadlo, o kterém
+# by se reproduktor dozvěděl za pět minut, už je pryč.
+mode: single
+max_exceeded: silent
+
+variables:
+  kdo_doma: !input kdo_doma
+  druhy: !input druhy
+
+triggers:
+  - trigger: event
+    event_type: spotterra_udalost
+
+conditions:
+  - condition: template
+    value_template: "{{ (trigger.event.data.tts_text | default('')) | length > 0 }}"
+  - condition: template
+    value_template: "{{ (trigger.event.data.druh | default('alert')) in druhy }}"
+  - condition: template
+    value_template: >-
+      {{ kdo_doma | count == 0
+         or kdo_doma | select('is_state', 'home') | list | count > 0 }}
+
+actions:
+  # Snímek hlasitosti PŘED hlášením, ať se po něm vrátí, co bylo —
+  # ne pevná hodnota, na kterou si nikdo nevzpomene.
+  - action: scene.create
+    data:
+      scene_id: spotterra_pred_hlasenim
+      snapshot_entities: !input reproduktor
+  - action: media_player.volume_set
+    target:
+      entity_id: !input reproduktor
+    data:
+      volume_level: !input hlasitost
+  - action: tts.speak
+    target:
+      entity_id: !input tts
+    data:
+      media_player_entity_id: !input reproduktor
+      message: "{{ trigger.event.data.tts_text }}"
+  - delay:
+      seconds: 8
+  - action: scene.turn_on
+    target:
+      entity_id: scene.spotterra_pred_hlasenim
+  - delay:
+      minutes: !input rozestup

@@ -1,0 +1,78 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Spotterra",
+        "description": "Create a token in Spotterra: Settings → Account → Home Assistant integration.",
+        "data": {
+          "token": "Token",
+          "url": "Server"
+        },
+        "data_description": {
+          "url": "Keep the default address."
+        }
+      },
+      "reauth_confirm": {
+        "title": "New Spotterra token",
+        "description": "The previous token no longer works (it was removed in Spotterra settings). Create a new one and paste it here.",
+        "data": {
+          "token": "Token"
+        }
+      }
+    },
+    "error": {
+      "invalid_auth": "The token doesn't work. Create a new one in Spotterra settings.",
+      "cannot_connect": "Can't reach Spotterra. Try again in a moment."
+    },
+    "abort": {
+      "already_configured": "This token is already set up.",
+      "reauth_successful": "Token updated."
+    }
+  },
+  "entity": {
+    "sensor": {
+      "nad_domem": {
+        "name": "Aircraft overhead"
+      },
+      "zajimave": {
+        "name": "Interesting aircraft"
+      },
+      "dalsi_prulet_min": {
+        "name": "Next flyover in"
+      },
+      "dalsi_prulet_typ": {
+        "name": "Next flyover aircraft"
+      },
+      "nejblizsi_zajimave": {
+        "name": "Most interesting now"
+      },
+      "iss_zacatek": {
+        "name": "Next ISS pass"
+      },
+      "iss_elevace": {
+        "name": "Next ISS pass elevation"
+      }
+    },
+    "binary_sensor": {
+      "je_zajimave": {
+        "name": "Something interesting overhead"
+      },
+      "tiche_hodiny": {
+        "name": "Quiet hours"
+      }
+    },
+    "event": {
+      "udalost": {
+        "name": "Announcement",
+        "state_attributes": {
+          "event_type": {
+            "state": {
+              "alert": "Alert",
+              "hlidka": "Watch"
+            }
+          }
+        }
+      }
+    }
+  }
+}
