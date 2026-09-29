@@ -157,3 +157,13 @@ with your entity prefix).
 
 Data: aircraft positions come from community ADS-B networks, satellite
 orbits from CelesTrak.
+
+## Licence
+
+[PolyForm Noncommercial 1.0.0](LICENSE) — pro osobní a nekomerční použití
+zdarma: používej, upravuj a sdílej dál (s touto licencí a uvedením autora).
+**Komerční použití není dovoleno** — kdo o něj stojí, ozvi se na
+info@spotterra.com.
+
+*License: PolyForm Noncommercial 1.0.0 — free for personal and other
+noncommercial use; commercial use requires a separate agreement.*
